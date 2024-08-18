@@ -59,8 +59,6 @@
             listBox1.Size = new Size(293, 424);
             listBox1.Sorted = true;
             listBox1.TabIndex = 0;
-            listBox1.SelectedIndexChanged += ListBox1_SelectedIndexChanged;
-            listBox1.Enter += listBox1_Enter;
             listBox1.MouseDoubleClick += listBox1_MouseDoubleClick;
             // 
             // listBox2
@@ -73,8 +71,6 @@
             listBox2.Size = new Size(293, 424);
             listBox2.Sorted = true;
             listBox2.TabIndex = 1;
-            listBox2.SelectedIndexChanged += ListBox2_SelectedIndexChanged;
-            listBox2.Enter += listBox2_Enter;
             listBox2.MouseDoubleClick += listBox2_MouseDoubleClick;
             // 
             // button1
@@ -179,13 +175,11 @@
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             exitToolStripMenuItem.Size = new Size(142, 22);
             exitToolStripMenuItem.Text = "Exit";
-            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // openFileDialog1
             // 
             openFileDialog1.DefaultExt = "txt";
             openFileDialog1.FileName = "openFileDialog1";
-            openFileDialog1.FileOk += openFileDialog1_FileOk;
             // 
             // saveFileDialog1
             // 

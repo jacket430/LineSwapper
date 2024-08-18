@@ -81,6 +81,9 @@ namespace LineSwapper
             foreach (var item in selectedItems)
             {
                 target.Items.Add(item);
+            }
+            foreach (var item in selectedItems)
+            {
                 source.Items.Remove(item);
             }
             UpdateButtonStates();
@@ -122,18 +125,18 @@ namespace LineSwapper
         private void LoadFile(string filePath)
         {
             currentFilePath = filePath;
-            var linesListBox1 = System.IO.File.ReadAllLines(currentFilePath);
+            var linesListBox1 = File.ReadAllLines(currentFilePath);
             listBox1.Items.Clear();
             listBox1.Items.AddRange(linesListBox1);
 
-            string stashedFilePath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(currentFilePath)!,
-                System.IO.Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + System.IO.Path.GetExtension(currentFilePath)
+            string stashedFilePath = Path.Combine(
+                Path.GetDirectoryName(currentFilePath)!,
+                Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + Path.GetExtension(currentFilePath)
             );
 
-            if (System.IO.File.Exists(stashedFilePath))
+            if (File.Exists(stashedFilePath))
             {
-                var linesListBox2 = System.IO.File.ReadAllLines(stashedFilePath);
+                var linesListBox2 = File.ReadAllLines(stashedFilePath);
                 listBox2.Items.Clear();
                 listBox2.Items.AddRange(linesListBox2);
             }
@@ -187,20 +190,19 @@ namespace LineSwapper
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
         private void SaveFile(string filePath)
         {
             var linesListBox1 = listBox1.Items.Cast<string>().ToArray();
-            System.IO.File.WriteAllLines(filePath, linesListBox1);
+            File.WriteAllLines(filePath, linesListBox1);
             currentFilePath = filePath;
 
-            string stashedFilePath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(currentFilePath)!,
-                System.IO.Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + System.IO.Path.GetExtension(currentFilePath)
+            string stashedFilePath = Path.Combine(
+                Path.GetDirectoryName(currentFilePath)!,
+                Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + Path.GetExtension(currentFilePath)
             );
 
             var linesListBox2 = listBox2.Items.Cast<string>().ToArray();
-            System.IO.File.WriteAllLines(stashedFilePath, linesListBox2);
+            File.WriteAllLines(stashedFilePath, linesListBox2);
 
             toolStripStatusLabel1.Text = $"Saved file: {currentFilePath}";
             isModified = false;
@@ -252,7 +254,7 @@ namespace LineSwapper
 
         private void OpenRecentFile(string filePath)
         {
-            if (System.IO.File.Exists(filePath))
+            if (File.Exists(filePath))
             {
                 LoadFile(filePath);
             }
@@ -266,14 +268,14 @@ namespace LineSwapper
 
         private void SaveRecentFiles()
         {
-            System.IO.File.WriteAllLines(RecentFilesPath, recentFiles);
+            File.WriteAllLines(RecentFilesPath, recentFiles);
         }
 
         private void LoadRecentFiles()
         {
-            if (System.IO.File.Exists(RecentFilesPath))
+            if (File.Exists(RecentFilesPath))
             {
-                recentFiles = System.IO.File.ReadAllLines(RecentFilesPath).ToList();
+                recentFiles = File.ReadAllLines(RecentFilesPath).ToList();
                 UpdateRecentFilesMenu();
             }
         }

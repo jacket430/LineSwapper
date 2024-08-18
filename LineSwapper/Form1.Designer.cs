@@ -165,8 +165,13 @@
             // 
             // openFileDialog1
             // 
+            openFileDialog1.DefaultExt = "txt";
             openFileDialog1.FileName = "openFileDialog1";
             openFileDialog1.FileOk += openFileDialog1_FileOk;
+            // 
+            // saveFileDialog1
+            // 
+            saveFileDialog1.DefaultExt = "txt";
             // 
             // Form1
             // 
@@ -182,7 +187,7 @@
             Controls.Add(listBox2);
             Controls.Add(listBox1);
             Name = "Form1";
-            Text = "Form1";
+            Text = "LineSwap";
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);

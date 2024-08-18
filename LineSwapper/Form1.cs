@@ -136,9 +136,14 @@ namespace LineSwapper
                     toolStripStatusLabel1.Text = $"Loaded file: {currentFilePath}";
                     isModified = false;
 
-                    // Update recent files
                     AddToRecentFiles(currentFilePath);
                     UpdateRecentFilesMenu();
+
+                    if (listBox1.Items.Count > 0)
+                    {
+                        listBox1.SelectedIndex = 0;
+                        listBox1.Focus();
+                    }
                 }
             }
         }
@@ -293,6 +298,13 @@ namespace LineSwapper
 
                 toolStripStatusLabel1.Text = $"Loaded file: {currentFilePath}";
                 isModified = false;
+
+                // Auto focus the first item in listBox1
+                if (listBox1.Items.Count > 0)
+                {
+                    listBox1.SelectedIndex = 0;
+                    listBox1.Focus();
+                }
             }
             else
             {
@@ -313,6 +325,56 @@ namespace LineSwapper
             {
                 recentFiles = System.IO.File.ReadAllLines(RecentFilesPath).ToList();
                 UpdateRecentFilesMenu();
+            }
+        }
+
+        private void listBox1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            int index = listBox1.IndexFromPoint(e.Location);
+            if (index != ListBox.NoMatches)
+            {
+                var selectedItem = listBox1.Items[index];
+                listBox2.Items.Add(selectedItem);
+                listBox1.Items.RemoveAt(index);
+                UpdateButtonStates();
+                MarkAsModified();
+            }
+        }
+
+        private void listBox2_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            int index = listBox2.IndexFromPoint(e.Location);
+            if (index != ListBox.NoMatches)
+            {
+                var selectedItem = listBox2.Items[index];
+                listBox1.Items.Add(selectedItem);
+                listBox2.Items.RemoveAt(index);
+                UpdateButtonStates();
+                MarkAsModified();
+            }
+        }
+
+        private void listBox2_Enter(object sender, EventArgs e)
+        {
+            if (sender == listBox1)
+            {
+                listBox2.ClearSelected();
+            }
+            else if (sender == listBox2)
+            {
+                listBox1.ClearSelected();
+            }
+        }
+
+        private void listBox1_Enter(object sender, EventArgs e)
+        {
+            if (sender == listBox1)
+            {
+                listBox2.ClearSelected();
+            }
+            else if (sender == listBox2)
+            {
+                listBox1.ClearSelected();
             }
         }
     }

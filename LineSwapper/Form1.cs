@@ -3,11 +3,16 @@ namespace LineSwapper
     public partial class Form1 : Form
     {
         private string? currentFilePath;
+        private bool isModified = false;
+        private List<string> recentFiles = new List<string>();
+        private const string RecentFilesPath = "recentFiles.txt";
 
         public Form1()
         {
             InitializeComponent();
             UpdateButtonStates();
+            LoadRecentFiles();
+            this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -40,6 +45,11 @@ namespace LineSwapper
             UpdateButtonStates();
         }
 
+        private void MarkAsModified()
+        {
+            isModified = true;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             var selectedItems = listBox1.SelectedItems.Cast<object>().ToList();
@@ -49,6 +59,7 @@ namespace LineSwapper
                 listBox1.Items.Remove(item);
             }
             UpdateButtonStates();
+            MarkAsModified();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -59,6 +70,7 @@ namespace LineSwapper
             }
             listBox1.Items.Clear();
             UpdateButtonStates();
+            MarkAsModified();
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -69,6 +81,7 @@ namespace LineSwapper
             }
             listBox2.Items.Clear();
             UpdateButtonStates();
+            MarkAsModified();
         }
 
         private void button4_Click(object sender, EventArgs e)
@@ -80,6 +93,7 @@ namespace LineSwapper
                 listBox2.Items.Remove(item);
             }
             UpdateButtonStates();
+            MarkAsModified();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -91,7 +105,7 @@ namespace LineSwapper
                 {
                     if (openFileDialog.FileName.EndsWith(".stashed.txt"))
                     {
-                        MessageBox.Show("Open the original file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Cannot open .stashed.txt files.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         args.Cancel = true;
                     }
                 };
@@ -118,6 +132,13 @@ namespace LineSwapper
                     {
                         listBox2.Items.Clear();
                     }
+
+                    toolStripStatusLabel1.Text = $"Loaded file: {currentFilePath}";
+                    isModified = false;
+
+                    // Update recent files
+                    AddToRecentFiles(currentFilePath);
+                    UpdateRecentFilesMenu();
                 }
             }
         }
@@ -133,11 +154,13 @@ namespace LineSwapper
                 listBox1.Items.Add(line);
             }
             UpdateButtonStates();
+            toolStripStatusLabel1.Text = $"Loaded file: {currentFilePath}";
+            isModified = false;
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            Close();
         }
 
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -159,6 +182,9 @@ namespace LineSwapper
 
                 var linesListBox2 = listBox2.Items.Cast<string>().ToArray();
                 System.IO.File.WriteAllLines(stashedFilePath, linesListBox2);
+
+                toolStripStatusLabel1.Text = $"Saved file: {currentFilePath}";
+                isModified = false;
             }
             else
             {
@@ -192,6 +218,101 @@ namespace LineSwapper
 
                 var linesListBox2 = listBox2.Items.Cast<string>().ToArray();
                 System.IO.File.WriteAllLines(stashedFilePath, linesListBox2);
+
+                toolStripStatusLabel1.Text = $"Saved file as: {currentFilePath}";
+                isModified = false;
+            }
+        }
+
+        private void Form1_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (isModified)
+            {
+                var result = MessageBox.Show("You have unsaved changes. Do you want to save before exiting?", "Unsaved Changes", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    saveToolStripMenuItem_Click(this, e);
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                }
+            }
+            SaveRecentFiles();
+        }
+
+        private void AddToRecentFiles(string filePath)
+        {
+            if (recentFiles.Contains(filePath))
+            {
+                recentFiles.Remove(filePath);
+            }
+            recentFiles.Insert(0, filePath);
+            if (recentFiles.Count > 10)
+            {
+                recentFiles.RemoveAt(10);
+            }
+        }
+
+        private void UpdateRecentFilesMenu()
+        {
+            openRecentToolStripMenuItem.DropDownItems.Clear();
+            openRecentToolStripMenuItem.Visible = recentFiles.Count > 0;
+            foreach (var file in recentFiles)
+            {
+                var item = new ToolStripMenuItem(file);
+                item.Click += (s, e) => OpenRecentFile(file);
+                openRecentToolStripMenuItem.DropDownItems.Add(item);
+            }
+        }
+
+        private void OpenRecentFile(string filePath)
+        {
+            if (System.IO.File.Exists(filePath))
+            {
+                currentFilePath = filePath;
+                var linesListBox1 = System.IO.File.ReadAllLines(currentFilePath);
+                listBox1.Items.Clear();
+                listBox1.Items.AddRange(linesListBox1);
+
+                string stashedFilePath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(currentFilePath)!,
+                    System.IO.Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + System.IO.Path.GetExtension(currentFilePath)
+                );
+
+                if (System.IO.File.Exists(stashedFilePath))
+                {
+                    var linesListBox2 = System.IO.File.ReadAllLines(stashedFilePath);
+                    listBox2.Items.Clear();
+                    listBox2.Items.AddRange(linesListBox2);
+                }
+                else
+                {
+                    listBox2.Items.Clear();
+                }
+
+                toolStripStatusLabel1.Text = $"Loaded file: {currentFilePath}";
+                isModified = false;
+            }
+            else
+            {
+                MessageBox.Show("File not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                recentFiles.Remove(filePath);
+                UpdateRecentFilesMenu();
+            }
+        }
+
+        private void SaveRecentFiles()
+        {
+            System.IO.File.WriteAllLines(RecentFilesPath, recentFiles);
+        }
+
+        private void LoadRecentFiles()
+        {
+            if (System.IO.File.Exists(RecentFilesPath))
+            {
+                recentFiles = System.IO.File.ReadAllLines(RecentFilesPath).ToList();
+                UpdateRecentFilesMenu();
             }
         }
     }

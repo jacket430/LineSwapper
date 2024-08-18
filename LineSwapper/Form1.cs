@@ -5,7 +5,9 @@ namespace LineSwapper
         private string? currentFilePath;
         private bool isModified = false;
         private List<string> recentFiles = new List<string>();
-        private const string RecentFilesPath = "recentFiles.txt";
+        private readonly string RecentFilesPath = Path.Combine(Application.StartupPath, "recentFiles.txt");
+        private System.Windows.Forms.Timer doubleClickTimer;
+        private bool isDoubleClick = false;
 
         public Form1()
         {
@@ -19,6 +21,10 @@ namespace LineSwapper
             listBox2.SelectedIndexChanged += ListBox_SelectedIndexChanged;
             listBox1.MouseDoubleClick += listBox1_MouseDoubleClick;
             listBox2.MouseDoubleClick += listBox2_MouseDoubleClick;
+
+            doubleClickTimer = new System.Windows.Forms.Timer();
+            doubleClickTimer.Interval = SystemInformation.DoubleClickTime;
+            doubleClickTimer.Tick += DoubleClickTimer_Tick;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -181,6 +187,7 @@ namespace LineSwapper
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "<Pending>")]
         private void SaveFile(string filePath)
         {
             var linesListBox1 = listBox1.Items.Cast<string>().ToArray();
@@ -271,14 +278,30 @@ namespace LineSwapper
             }
         }
 
+        private void DoubleClickTimer_Tick(object? sender, EventArgs e)
+        {
+            doubleClickTimer.Stop();
+            isDoubleClick = false;
+        }
+
         private void listBox1_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
-            MoveItemOnDoubleClick(listBox1, listBox2, e);
+            if (!isDoubleClick)
+            {
+                isDoubleClick = true;
+                doubleClickTimer.Start();
+                MoveItemOnDoubleClick(listBox1, listBox2, e);
+            }
         }
 
         private void listBox2_MouseDoubleClick(object? sender, MouseEventArgs e)
         {
-            MoveItemOnDoubleClick(listBox2, listBox1, e);
+            if (!isDoubleClick)
+            {
+                isDoubleClick = true;
+                doubleClickTimer.Start();
+                MoveItemOnDoubleClick(listBox2, listBox1, e);
+            }
         }
 
         private void MoveItemOnDoubleClick(ListBox source, ListBox target, MouseEventArgs e)
@@ -287,8 +310,8 @@ namespace LineSwapper
             if (index != ListBox.NoMatches)
             {
                 var selectedItem = source.Items[index];
-                target.Items.Add(selectedItem);
                 source.Items.RemoveAt(index);
+                target.Items.Add(selectedItem);
                 UpdateButtonStates();
                 MarkAsModified();
             }

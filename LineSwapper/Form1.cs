@@ -2,6 +2,8 @@ namespace LineSwapper
 {
     public partial class Form1 : Form
     {
+        private string? currentFilePath;
+
         public Form1()
         {
             InitializeComponent();
@@ -86,16 +88,49 @@ namespace LineSwapper
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog();
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // Get the path of the selected file
+                    currentFilePath = openFileDialog.FileName;
+
+                    // Load the contents of the selected file into listBox1
+                    var linesListBox1 = System.IO.File.ReadAllLines(currentFilePath);
+                    listBox1.Items.Clear();
+                    listBox1.Items.AddRange(linesListBox1);
+
+                    // Create the stashed file path
+                    string stashedFilePath = System.IO.Path.Combine(
+                        System.IO.Path.GetDirectoryName(currentFilePath)!,
+                        System.IO.Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + System.IO.Path.GetExtension(currentFilePath)
+                    );
+
+                    // Check if the stashed file exists
+                    if (System.IO.File.Exists(stashedFilePath))
+                    {
+                        // Load the contents of the stashed file into listBox2
+                        var linesListBox2 = System.IO.File.ReadAllLines(stashedFilePath);
+                        listBox2.Items.Clear();
+                        listBox2.Items.AddRange(linesListBox2);
+                    }
+                    else
+                    {
+                        // Clear listBox2 if no stashed file is found
+                        listBox2.Items.Clear();
+                    }
+                }
+            }
         }
 
         private void openFileDialog1_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // Get the selected file path
-            string filePath = openFileDialog1.FileName;
+            currentFilePath = openFileDialog1.FileName;
 
             // Read all lines from the file
-            string[] lines = System.IO.File.ReadAllLines(filePath);
+            string[] lines = System.IO.File.ReadAllLines(currentFilePath);
 
             // Clear existing items in listBox1
             listBox1.Items.Clear();
@@ -119,6 +154,52 @@ namespace LineSwapper
         private void fileToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(currentFilePath))
+            {
+                // Get all items from listBox1
+                var linesListBox1 = listBox1.Items.Cast<string>().ToArray();
+
+                // Write all lines to the original file
+                System.IO.File.WriteAllLines(currentFilePath, linesListBox1);
+
+                // Create the stashed file path
+                string stashedFilePath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(currentFilePath)!,
+                    System.IO.Path.GetFileNameWithoutExtension(currentFilePath) + ".stashed" + System.IO.Path.GetExtension(currentFilePath)
+                );
+
+                // Get all items from listBox2
+                var linesListBox2 = listBox2.Items.Cast<string>().ToArray();
+
+                // Write all lines to the stashed file
+                System.IO.File.WriteAllLines(stashedFilePath, linesListBox2);
+            }
+            else
+            {
+                MessageBox.Show("No file is currently loaded.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                // Get the selected file path
+                string filePath = saveFileDialog1.FileName;
+
+                // Get all items from listBox1
+                var lines = listBox1.Items.Cast<string>().ToArray();
+
+                // Write all lines to the file
+                System.IO.File.WriteAllLines(filePath, lines);
+
+                // Update the current file path
+                currentFilePath = filePath;
+            }
         }
     }
 }
